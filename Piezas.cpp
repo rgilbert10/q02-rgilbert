@@ -1,5 +1,8 @@
 #include "Piezas.h"
 #include <vector>
+#include <iostream>
+using namespace std;
+
 /** CLASS Piezas
  * Class for representing a Piezas vertical board, which is roughly based
  * on the game "Connect Four" where pieces are placed in a column and 
@@ -20,16 +23,27 @@
  * Constructor sets an empty board (default 3 rows, 4 columns) and 
  * specifies it is X's turn first
 **/
-Piezas::Piezas()
-{
+Piezas::Piezas() {
+    board.clear();
+    board.resize(BOARD_ROWS, std::vector<Piece>(BOARD_COLS));
+    for(int i=0; i<(int)board.size(); i++) {
+        for(int j=0; j<(int)board[i].size(); j++) {
+            board[i][j] = Blank;
+        }
+    }
+    turn = X;
 }
 
 /**
  * Resets each board location to the Blank Piece value, with a board of the
  * same size as previously specified
 **/
-void Piezas::reset()
-{
+void Piezas::reset() {
+    for(int i=0; i<(int)board.size(); i++) {
+        for(int j=0; j<(int)board[i].size(); j++) {
+            board[i][j] = Blank;
+        }
+    }
 }
 
 /**
@@ -42,7 +56,31 @@ void Piezas::reset()
 **/ 
 Piece Piezas::dropPiece(int column)
 {
-    return Blank;
+    int taken=0;
+    Piece currentPiece = turn;
+    
+    if(column >= BOARD_COLS) {
+        if(turn == X) turn = O;
+        else turn = X;
+        return Invalid;
+    }
+    
+    for(int row=0; row<(int)board.size(); row++) {
+        if(board[row][column] == X) taken++;
+        else if(board[row][column] == O) taken++;
+        else {
+            board[row][column] = turn;
+            if(turn == X) turn = O;
+            else turn = X;
+            return currentPiece;
+        }
+    }
+    if(taken == BOARD_ROWS-1) {
+        if(turn == X) turn = O;
+        else turn = X;
+        return Blank;
+    }
+        
 }
 
 /**
@@ -51,7 +89,10 @@ Piece Piezas::dropPiece(int column)
 **/
 Piece Piezas::pieceAt(int row, int column)
 {
-    return Blank;
+    if (row >= BOARD_ROWS) return Invalid;
+    else if (column >= BOARD_COLS) return Invalid;
+    else if(board[row][column] == Blank) return Blank;
+    else return board[row][column];
 }
 
 /**
@@ -65,5 +106,43 @@ Piece Piezas::pieceAt(int row, int column)
 **/
 Piece Piezas::gameState()
 {
-    return Blank;
+    bool xWin = false;
+    bool oWin = false;
+    //Check for full board
+    for(int i=0; i<(int)board.size(); i++) {
+        for(int j=0; j<(int)board[i].size(); j++) {
+            if(board[i][j] == Blank)
+                return Invalid;
+        }
+    }
+
+    
+    //Board is full - find winner
+    //Check horizontal winner
+    for(int row=0; row<BOARD_ROWS; row++) {
+        int xCount = 0;
+        int oCount = 0;
+        for(int column=0; column<BOARD_COLS; column++) {
+            if(pieceAt(row, column) == X) xCount++;
+            else oCount++;
+        }
+        if(xCount==BOARD_COLS) xWin = true;
+        else if(oCount==BOARD_COLS) oWin = true;
+    }
+    //Checking for vertical winner
+    for(int column=0; column<BOARD_COLS; column++) {
+        int xCount = 0;
+        int oCount = 0;
+        for(int row=0; row<BOARD_ROWS; row++) {
+            if(pieceAt(row, column) == X) xCount++;
+            else oCount++;
+        }
+        if(xCount==BOARD_ROWS) xWin = true;
+        else if(oCount==BOARD_ROWS) oWin = true;
+    }
+    if(xWin == true && oWin == true) return Blank;
+    else if (xWin == true) return X;
+    else if (oWin == true) return O;
+    else return Blank;
 }
+
